@@ -7,6 +7,8 @@
 
 source "${XDG_CONFIG_HOME:-$HOME/.config}/signal/init.bash"
 
+[[ ! $signal_cli ]] && signal_cli='signal-cli'
+
 declare -i debug=0
 
 if [[ $1 == '-d' ]]; then

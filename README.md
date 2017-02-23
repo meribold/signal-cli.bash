@@ -33,8 +33,8 @@ Examples.
 It should look something like this.
 
 ```bash
-# Path to the `signal-cli` executable.
-signal_cli='signal-cli'
+# Path to the `signal-cli` executable, if the directory is not in "$PATH".
+# signal_cli="$HOME/signal-cli-0.5.5/bin/signal-cli"
 
 user='+990123456789'
 

@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
-# This file should define "$signal_cli" assign the users phone number to "$user" and
-# declare and populate two associative arrays: `contacts` and `groups`.
+# This file should assign the users phone number to "$user" and declare and populate two
+# associative arrays: `contacts` and `groups`.
 source "${XDG_CONFIG_HOME:-$HOME/.config}/signal/init.bash"
+
+[[ ! $signal_cli ]] && signal_cli='signal-cli'
 
 show-help() {
 cat << EOF
