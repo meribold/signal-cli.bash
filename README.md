@@ -8,6 +8,8 @@ Two Bash scripts aiming to make [signal-cli][1] more convenient to use.  **Requi
 Starts `signal-cli` in daemon mode and creates notifications for incoming messages using
 `notify-send`.  I only tested it with the [dunst(1) notification daemon][2].
 
+![Dunst message window screenshot](/../screenshots/notification.png?raw=true "Dunst message window screenshot")
+
 ## `s`
 Sends messages and optionally a screenshot of a region or window.  Screenshots are taken
 using [maim(1)][3] and [slop][4].  Examples.
