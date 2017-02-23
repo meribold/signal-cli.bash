@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+
+# Starts `signal-cli` in daemon mode and creates notifications for incoming messages using
+# `notify-send`.  I only tested it with the [dunst(1) notification daemon][1].
+#
+# [1]: https://github.com/dunst-project/dunst
+
+source "${XDG_CONFIG_HOME:-$HOME/.config}/signal/init.bash"
+
+declare -i debug=0
+
+if [[ $1 == '-d' ]]; then
+   (( ++debug ))
+fi
+
+start-daemon() {
+   "$signal_cli" -u "$user" daemon
+}
+
+notify() {
+   # Replace consecutive newlines with null ('\0').  The use of `fflush()` is essential.
+   # It forces gawk to flush stdout.  Without it, gawk buffers its output.  See
+   # <http://mywiki.wooledge.org/BashFAQ/009>.
+   gawk -v RS='\n\n' -v ORS='\0' '{ print; fflush(stdout) }' |
+   # This method (`RS=`) doesn't work with gawk, but should with Plan 9 awk:
+   # /opt/plan9/bin/awk -v RS= -v ORS='\0' '{ print; fflush() }' |
+   while IFS= read -r -d '' message; do
+      (( debug )) && echo "$message"$'\n'
+      if [[ ${message%%$'\n'*} == *${user}* ]]; then
+         # The first line of the message contains the users phone number; i.e., it's from
+         # the user.  Don't do anything with it.
+         continue
+      fi
+      # The message body extends to the end of the message or until we encounter an
+      # "Attachments" or "Group info" section; `sed` uses BREs:
+      # <https://en.wikipedia.org/wiki/Regular_expression#POSIX_basic_and_extended>.
+      body=$(sed -n '4,$ { /^Body: /,/^\(Attachments: $\|Group info:$\)/ p } ' \
+             <<< "$message")
+      [[ ! $body ]] && continue
+      # Remove the "Body: " prefix.
+      body=${body:6}
+      attachment=
+      if [[ $(sed -n '$ { /^Attachments: $/ p }' <<< "$body") ]]; then
+         file=${message##*$'\n'  Stored plaintext in: }
+         # Check if a prefix string was removed by comparing string lengths.
+         if (( ${#file} != ${#message} )); then
+            attachment=" (file://$file)"
+         fi
+      fi
+      timestamp=${message##*$'\n'Message timestamp: }
+      # The (Unix time) timestamps used have 13 digits.  The last 3 are milliseconds.
+      timestamp=${timestamp:0:13}
+      # The format `date` expects is '@1234567890.123'.
+      timestamp=$(date -d "@${timestamp:0:10}.${timestamp:11}" '+%H:%M')
+      # Remove the last line ("Attachments: " or "Group info:").
+      body=${body%$'\n'*}
+      # Remove a single trailing space if there is one.
+      body=${body/% }
+      sender=$({ head -n 1 | sed 's/Envelope from: “\(.*\)”.*/\1/'; } <<< "$message")
+      [[ ! $sender ]] && continue
+      group_info=$(sed -n '5,$ { /^Group info:$/,$ p }' <<< "$message")
+      group_name=$(sed -n '3 p' <<< "$group_info")
+      group_name=${group_name:8}
+      notification="<b>$timestamp</b> <u><i>${sender}</i></u>"
+      notification+="${group_name:+ ($group_name)}:${body:+ $body}$attachment"
+      if [[ $group_name ]]; then
+         notify-send -a 'signal-cli' -u low "$notification"
+      else
+         notify-send -a 'signal-cli' -h 'string:bgcolor:#d70087' "$notification"
+      fi
+   done
+}
+
+start-daemon | notify
+
+# vim: tw=90 sts=-1 sw=3 et
