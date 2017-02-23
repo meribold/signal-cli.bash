@@ -1,7 +1,8 @@
 # signal-cli.bash
 
-Two Bash scripts aiming to make [signal-cli][1] more convenient to use.  **Requires a
-configuration file** at `$HOME/.config/signal/init.bash`.
+Two Bash scripts aiming to make [signal-cli][1] more convenient to use.  **Requires** a
+[configuration file](#example-configsignalinitbash) at
+`$HOME/.config/signal/init.bash`.
 
 ## `signal-daemon`
 Starts `signal-cli` in daemon mode and creates notifications for incoming messages using
