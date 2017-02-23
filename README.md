@@ -29,6 +29,8 @@ Examples.
 
         s -s alvin "This message is optional."
 
+![GIF demonstrating the -s option](/../screenshots/s-option.gif?raw=true "GIF demonstrating the -s option")
+
 ## Example `~/.config/signal/init.bash`
 It should look something like this.
 
