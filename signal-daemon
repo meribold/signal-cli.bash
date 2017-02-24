@@ -34,15 +34,14 @@ notify() {
          continue
       fi
       # The message body extends to the end of the message or until we encounter an
-      # "Attachments" or "Group info" section; `sed` uses BREs:
-      # <https://en.wikipedia.org/wiki/Regular_expression#POSIX_basic_and_extended>.
-      body=$(sed -n '4,$ { /^Body: /,/^\(Attachments: $\|Group info:$\)/ p } ' \
-             <<< "$message")
-      [[ ! $body ]] && continue
-      # Remove the "Body: " prefix.
-      body=${body:6}
+      # "Attachments: " or "Group info:" section.
+      pattern=$'*\nBody: *'
+      [[ $message != $pattern ]] && continue
+      body=${message#*$'\nBody: '}
+      body=${body%$'\nAttachments: \n'*}
+      body=${body%$'\nGroup info:\n'*}
       attachment=
-      if [[ $(sed -n '$ { /^Attachments: $/ p }' <<< "$body") ]]; then
+      if [[ $message =~ $'\nAttachments: \n- ' ]]; then
          file=${message##*$'\n'  Stored plaintext in: }
          # Check if a prefix string was removed by comparing string lengths.
          if (( ${#file} != ${#message} )); then
@@ -54,16 +53,18 @@ notify() {
       timestamp=${timestamp:0:13}
       # The format `date` expects is '@1234567890.123'.
       timestamp=$(date -d "@${timestamp:0:10}.${timestamp:11}" '+%H:%M')
-      # Remove the last line if it's "Attachments: " or "Group info:".
-      body=${body%$'\n'Attachments: }
-      body=${body%$'\n'Group info:}
       # Remove a single trailing space if there is one.
       body=${body/% }
-      sender=$({ head -n 1 | sed 's/Envelope from: “\(.*\)”.*/\1/'; } <<< "$message")
+      # Remove `”` and everything following it.
+      sender=${message%%”*}
+      sender=${sender#Envelope from: “}
       [[ ! $sender ]] && continue
-      group_info=$(sed -n '5,$ { /^Group info:$/,$ p }' <<< "$message")
-      group_name=$(sed -n '3 p' <<< "$group_info")
-      group_name=${group_name:8}
+      group_name=
+      pattern=$'*\nGroup info:\n  Id: *\n  Name: '
+      if [[ $message == $pattern* ]]; then
+         group_name=${message##$pattern}
+         group_name=${group_name%%$'\n'*}
+      fi
       notification="<b>$timestamp</b> <u><i>${sender}</i></u>"
       notification+="${group_name:+ ($group_name)}:${body:+ $body}$attachment"
       if [[ $group_name ]]; then
