@@ -54,8 +54,9 @@ notify() {
       timestamp=${timestamp:0:13}
       # The format `date` expects is '@1234567890.123'.
       timestamp=$(date -d "@${timestamp:0:10}.${timestamp:11}" '+%H:%M')
-      # Remove the last line ("Attachments: " or "Group info:").
-      body=${body%$'\n'*}
+      # Remove the last line if it's "Attachments: " or "Group info:".
+      body=${body%$'\n'Attachments: }
+      body=${body%$'\n'Group info:}
       # Remove a single trailing space if there is one.
       body=${body/% }
       sender=$({ head -n 1 | sed 's/Envelope from: “\(.*\)”.*/\1/'; } <<< "$message")
