@@ -57,7 +57,16 @@ notify() {
       body=${body/% }
       # Remove `”` and everything following it.
       sender=${message%%”*}
-      sender=${sender#Envelope from: “}
+      if [[ $sender != $message ]]; then
+         # It worked: some substring was removed by the parameter expansion.  TODO: is
+         # there a better way to check this?
+         sender=${sender#Envelope from: “}
+      else
+         # The message didn't contain a name: use the phone number.
+         sender=${sender#Envelope from: }
+         # Remove everything following the first space character.
+         sender=${sender%% *}
+      fi
       [[ ! $sender ]] && continue
       group_name=
       pattern=$'*\nGroup info:\n  Id: *\n  Name: '
