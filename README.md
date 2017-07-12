@@ -1,54 +1,65 @@
 # signal-cli.bash
 
-Two Bash scripts aiming to make [signal-cli][1] more convenient for interactive use.
-**Requires** a [configuration file](#example-configsignalinitbash) at
-`$HOME/.config/signal/init.bash`.
+Two Bash scripts aiming to make [`signal-cli`][1] convenient for interactive use.
 
 ## `signal-daemon`
 Starts `signal-cli` in daemon mode and creates notifications for incoming messages using
-`notify-send`.  I only tested it with the [dunst(1)][2] notification daemon.
+`notify-send`.  I only tested it with the [`dunst(1)`][2] notification daemon.
 
 ![Dunst message window screenshot](/../screenshots/notification.png?raw=true "Dunst message window screenshot")
 
 ## `s`
 Sends messages and optionally a screenshot of a region or window.  Screenshots are taken
-using [maim(1)][3] and [slop][4].  Requires that signal-cli is running in daemon mode.
-Examples.
+using [`maim(1)`][3] and [`slop(1)`][4].  Requires that `signal-cli` is running in daemon
+mode (via `signal-daemon` or directly).  Examples.
 
-*   Send a message to one recipient or a group:
-
-        s alvin "Curiouser and curiouser!"
-        s family Heh
-        fortune -s | s alvin
+*   Send messages to one recipient or a group:
+    ```bash
+    s alvin "Curiouser and curiouser!"
+    s family Heh
+    fortune -s | s alvin
+    ```
 
 *   Send a message to multiple recipients:
-
-        s alvin lukas "I summon entropy."
+    ```bash
+    s alvin lukas "I summon entropy."
+    ```
 
 *   Query for a region or window, take a screenshot, and sent it and an optional message:
-
-        s -s alvin "This message is optional."
+    ```bash
+    s -s alvin "This message is optional."
+    ```
 
 ![GIF demonstrating the -s option](/../screenshots/s-option.gif?raw=true "GIF demonstrating the -s option")
 
-## Example `~/.config/signal/init.bash`
-It should look something like this.
+## Installation
 
-```bash
-# Path to the `signal-cli` executable, if the directory is not in "$PATH".
-# signal_cli="$HOME/signal-cli-0.5.5/bin/signal-cli"
+1.  Put the two scripts somewhere in your `$PATH`.  For example `~/bin/`:
+    ```bash
+    curl -fLo ~/bin/signal-daemon --create-dirs \
+        https://raw.githubusercontent.com/meribold/signal-cli.bash/master/signal-daemon
+    curl -fLo ~/bin/s --create-dirs \
+        https://raw.githubusercontent.com/meribold/signal-cli.bash/master/s
+    ```
 
-user='+990123456789'
+2.  Create a configuration file with your phone number and aliases for your contacts and
+    groups at `~/.config/signal/init.bash`.  It should look something like this.
 
-# Declare as associative arrays.
-declare -A contacts groups
+    ```bash
+    # Path to the `signal-cli` executable, if the directory is not in "$PATH".
+    # signal_cli="$HOME/signal-cli-0.5.6/bin/signal-cli"
 
-contacts['alvin']='+119876543210'
-contacts['tom']='+2201010101010'
+    user='+990123456789'
 
-groups['family']='aiHo/b6oCiet+ah6makoh6=='
-groups['thundermonkey']='Zi0Eng2iHao8xiejaepahK=='
-```
+    # Declare as associative arrays.
+    declare -A contacts groups
+
+    contacts['alvin']='+119876543210'
+    contacts['tom']='+2201010101010'
+
+    groups['family']='aiHo/b6oCiet+ah6makoh6=='
+    groups['thundermonkey']='Zi0Eng2iHao8xiejaepahK=='
+    ```
 
 [1]: https://github.com/AsamK/signal-cli
 [2]: https://github.com/dunst-project/dunst
