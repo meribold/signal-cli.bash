@@ -11,9 +11,16 @@ source "${XDG_CONFIG_HOME:-$HOME/.config}/signal/init.bash"
 
 declare -i debug=0
 
-if [[ $1 == '-d' ]]; then
-   (( ++debug ))
-fi
+# http://mywiki.wooledge.org/BashFAQ/035#getopts
+# http://wiki.bash-hackers.org/howto/getopts_tutorial
+while getopts ':hsd' opt; do
+   case $opt in
+      d)
+         (( ++debug ))
+         ;;
+   esac
+done
+shift "$((OPTIND-1))" # Shift off the options and optional --.
 
 start-daemon() {
    "$signal_cli" -u "$user" daemon
@@ -84,6 +91,9 @@ notify() {
    done
 }
 
-start-daemon | notify
+# If there are more positional parameters, assume they name test input files and pipe
+# their contents into `notify`.  Normally, start `signal-cli` in daemon mode and pipe its
+# output into `notify`.
+if [[ $1 ]]; then cat "$@" -; else start-daemon; fi | notify
 
 # vim: tw=90 sts=-1 sw=3 et
