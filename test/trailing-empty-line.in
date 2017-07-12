@@ -1,0 +1,11 @@
+Envelope from: “Francisco” +4213333333337 (device: 1)
+Timestamp: 1499788213184 (2017-07-11T15:50:13.184Z)
+Message timestamp: 1499788213184 (2017-07-11T15:50:13.184Z)
+Body: This message body has a trailing empty line that shouldn't be displayed in the notification.
+
+
+Envelope from: “Fransisco” +4213333333337 (device: 1)
+Timestamp: 1499788247319 (2017-07-11T15:50:47.319Z)
+Message timestamp: 1499788247319 (2017-07-11T15:50:47.319Z)
+Body: This is a normal message.
+

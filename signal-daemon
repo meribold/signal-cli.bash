@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+shopt -s extglob
+
 # Starts `signal-cli` in daemon mode and creates notifications for incoming messages using
 # `notify-send`.  I only tested it with the [dunst(1) notification daemon][1].
 #
@@ -35,6 +37,9 @@ notify() {
    # /opt/plan9/bin/awk -v RS= -v ORS='\0' '{ print; fflush() }' |
    while IFS= read -r -d '' message; do
       (( debug )) && echo "$message"$'\n'
+      # Remove any empty lines at the start of the message.  These may exist when the
+      # previous messages body had a trailing empty line (or several).
+      message=${message##*($'\n')}
       if [[ ${message%%$'\n'*} == *${user}* ]]; then
          # The first line of the message contains the users phone number; i.e., it's from
          # the user.  Don't do anything with it.
