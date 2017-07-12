@@ -69,7 +69,7 @@ notify() {
       body=${body/% }
       # Remove `”` and everything following it.
       sender=${message%%”*}
-      if [[ $sender != $message ]]; then
+      if [[ $sender != "$message" ]]; then
          # It worked: some substring was removed by the parameter expansion.  TODO: is
          # there a better way to check this?
          sender=${sender#Envelope from: “}
