@@ -86,7 +86,7 @@ notify() {
          group_name=${message##$pattern}
          group_name=${group_name%%$'\n'*}
       fi
-      notification="<b>$timestamp</b> <u><i>${sender}</i></u>"
+      notification="<b>$timestamp</b> ${sender}"
       notification+="${group_name:+ ($group_name)}:${body:+ $body}$attachment"
       if [[ $group_name ]]; then
          notify-send -a 'signal-cli' -u low "$notification"
