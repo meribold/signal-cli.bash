@@ -2,21 +2,37 @@
 
 shopt -s extglob
 
-# Starts `signal-cli` in daemon mode and creates notifications for incoming messages using
-# `notify-send`.  I only tested it with the [dunst(1) notification daemon][1].
-#
-# [1]: https://github.com/dunst-project/dunst
-
+# Squelch ShellCheck warning (https://github.com/koalaman/shellcheck/wiki/SC1090):
+# shellcheck source=/dev/null
 source "${XDG_CONFIG_HOME:-$HOME/.config}/signal/init.bash"
 
 [[ ! $signal_cli ]] && signal_cli='signal-cli'
 
-declare -i debug=0
+show-help() {
+cat << EOF
+Usage: ${0##*/} [-ad]
+Start signal-cli in daemon mode and creates notifications for incoming
+messages using notify-send.
+
+  -h  display this help and exit
+  -a  show avatars in notifications
+  -d  print debugging output
+EOF
+}
+
+declare -i debug=0 show_avatars=0
 
 # http://mywiki.wooledge.org/BashFAQ/035#getopts
 # http://wiki.bash-hackers.org/howto/getopts_tutorial
-while getopts ':hsd' opt; do
+while getopts ':had' opt; do
    case $opt in
+      h)
+         show-help
+         exit
+         ;;
+      a)
+         show_avatars=1
+         ;;
       d)
          (( ++debug ))
          ;;
@@ -58,6 +74,8 @@ notify() {
          # Check if a prefix string was removed by comparing string lengths.
          if (( ${#file} != ${#message} )); then
             attachment=" (file://$file)"
+         # else
+            # attachment="\n<b>Unknown attachments</b>"
          fi
       fi
       timestamp=${message##*$'\n'Message timestamp: }
@@ -67,19 +85,40 @@ notify() {
       timestamp=$(date -d "@${timestamp:0:10}.${timestamp:11}" '+%H:%M')
       # Remove a single trailing space if there is one.
       body=${body/% }
-      # Remove `”` and everything following it.
-      sender=${message%%”*}
-      if [[ $sender != "$message" ]]; then
-         # It worked: some substring was removed by the parameter expansion.  TODO: is
-         # there a better way to check this?
-         sender=${sender#Envelope from: “}
+      # Get the first line.
+      head=${message%%$'\n'*}
+      # Remove 'Envelope from: ' from the line's start.
+      from_info=${head#Envelope from: }
+      # If nothing was removed (the first line doesn't start with 'Envelope from: '), give
+      # up on this message.  TODO: is there a better way to check this?
+      [[ "$from_info" == "$head" ]] && continue
+      # Remove the closing quote mark (”) and everything following it.
+      sender=${from_info%%”*}
+      if [[ "$sender" != "$from_info" ]]; then
+         # It worked: some substring was removed by the parameter expansion.
+         sender=${sender#“} # Remove the quote mark before the name.
+         # Remove the closing quote make and everything before it.
+         number=${from_info##*” }
+         # Remove everything following the first space character.
+         number=${number%% *}
+            # Remove the first space character and everything following it.  I.e., only
+            # keep the first name.
+            # sender=${sender%% *}
       else
          # The message didn't contain a name: use the phone number.
-         sender=${sender#Envelope from: }
-         # Remove everything following the first space character.
-         sender=${sender%% *}
+         sender=${sender%% *} # Remove everything following the first space character.
+         number=$sender
       fi
       [[ ! $sender ]] && continue
+      # Declare empty or empty existing array.
+      options=()
+      if (( show_avatars )); then
+         # Grab the the avatar icon.
+         icon=${XDG_CONFIG_HOME:-$HOME/.config}/signal/avatars/contact-${number}
+         if [[ -f $icon ]]; then
+            options+=(-i $icon)
+         fi
+      fi
       group_name=
       pattern=$'*\nGroup info:\n  Id: *\n  Name: '
       if [[ $message == $pattern* ]]; then
@@ -89,10 +128,25 @@ notify() {
       notification="<b>$timestamp</b> ${sender}"
       notification+="${group_name:+ ($group_name)}:${body:+ $body}$attachment"
       if [[ $group_name ]]; then
-         notify-send -a 'signal-cli' -u low "$notification"
+         options+=(-u low)
       else
-         notify-send -a 'signal-cli' -h 'string:bgcolor:#d70087' "$notification"
+         options+=(-h 'string:bgcolor:#d70087')
       fi
+      notification="<b>$timestamp</b> $sender"
+      # XXX: this is kind of neat.
+      # body=$(trans -b :en "$body")
+      # XXX: listen to the translation.
+         # body="$(trans -b -p :en "$body" 2>/dev/null)" # this breaks
+      # body=$(trans -b -p :en <<< "$body" 2>/dev/null)
+      notification+="${group_name:+ ($group_name)}:${body:+ $body}$attachment"
+      # if [[ $group_name ]]; then
+      #    notify-send -a 'signal-cli' -u low "$notification"
+      # else
+      #    notify-send -a 'signal-cli' -h 'string:bgcolor:#d70087' "$notification"
+      # fi
+      # set -x
+      notify-send -a 'signal-cli' "${options[@]}" "$notification"
+      # set +x
    done
 }
 

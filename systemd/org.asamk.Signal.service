@@ -1,0 +1,6 @@
+[D-BUS Service]
+# Name=com.github.meribold.sigal-cli.bash
+Name=org.asamk.Signal
+Exec=/bin/false
+# SystemdService=dbus-org.asamk.Signal.service
+SystemdService=signal-cli.bash.service

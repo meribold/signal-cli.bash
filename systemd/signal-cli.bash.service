@@ -1,0 +1,12 @@
+[Unit]
+Description=signal-cli.bash
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=dbus
+ExecStart=/home/meribold/.bin/signal-daemon -ad
+BusName=org.asamk.Signal
+
+# [Install]
+# Alias=dbus-org.asamk.Signal.service

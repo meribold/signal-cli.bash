@@ -4,11 +4,12 @@
 # associative arrays: `contacts` and `groups`.
 source "${XDG_CONFIG_HOME:-$HOME/.config}/signal/init.bash"
 
+# ${signal_cli:='signal-cli'}
 [[ ! $signal_cli ]] && signal_cli='signal-cli'
 
 show-help() {
 cat << EOF
-Usage: ${0##*/} [-s] [RECIPIENT [RECIPIENT]...] [MESSAGE]
+Usage: ${0##*/} [-sd] [RECIPIENT [RECIPIENT]...] [MESSAGE]
 Send MESSAGE to one more recipients using signal-cli.  Requires that
 signal-cli is running in daemon mode providing the D-Bus interface.
 When MESSAGE is omitted, read from stdin.  See signal-cli(1).
