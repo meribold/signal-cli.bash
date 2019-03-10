@@ -25,7 +25,7 @@ mode (via `signal-daemon` or directly).  Examples.
     s alvin lukas "I summon entropy."
     ```
 
-*   Query for a region or window, take a screenshot, and sent it and an optional message:
+*   Query for a region or window, take a screenshot, and send it and an optional message:
     ```bash
     s -s alvin "This message is optional."
     ```
